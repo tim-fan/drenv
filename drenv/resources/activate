@@ -1,0 +1,36 @@
+# script to attach to docker container for environment.
+# This file must be sourced rather than executed - just to make usage identical to venv (!)
+# TODO: the rest of the scripts in this directory are executable, this is a bit ugly. Need to harmonise usage somehow.
+
+# getting script dir using BASH_SOURCE[0] fails in zsh. Falling back to $0 works in this case.
+# Haven't tested all that widely, e.g. with shells beside bash and zsh
+# If modifying in future, check in bash and zsh
+SCRIPT_DIR=$(dirname "$(readlink -f ${BASH_SOURCE[0]:-$0})")
+
+ENV_DIR_HOST=$(realpath ${SCRIPT_DIR}/..)
+CONTAINER_NAME_FILE=${ENV_DIR_HOST}/docker_container_name
+DRENV_SSH_AUTH_SOCK_HOST=${ENV_DIR_HOST}/resources/ssh_auth_sock
+
+if [ ! -f "$CONTAINER_NAME_FILE" ]; then
+    echo "Error: container name file missing!"
+    return 1
+fi
+
+CONTAINER_NAME=$(cat ${CONTAINER_NAME_FILE})
+
+# ensure SSH_AUTH_SOCK links to current sock (e.g. in case machine has been rebooted)
+# Exit if no ssh auth sock (TODO: handle case of missing sock))
+if [[ -z "$SSH_AUTH_SOCK" ]]; then
+    echo "Error: Must provide SSH_AUTH_SOCK in environment" 1>&2
+    return 1
+fi
+rm -f $DRENV_SSH_AUTH_SOCK_HOST
+ln -s $SSH_AUTH_SOCK $DRENV_SSH_AUTH_SOCK_HOST
+
+# ensure container running
+docker start $CONTAINER_NAME >/dev/null
+
+# start bash in the container
+# login shell specified so that pip-installed executables
+# are on path (~/.local/bin) (via ~/.profile)
+docker container exec -it $CONTAINER_NAME bash --login

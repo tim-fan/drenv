@@ -1,0 +1,36 @@
+#!/bin/bash
+# script to run a command in the docker container for environment.
+
+if [ $# -eq 0 ]; then
+ echo "Usage: $0 [command to run]"
+ exit 1
+fi
+
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+ENV_DIR_HOST=$(realpath ${SCRIPT_DIR}/..)
+CONTAINER_NAME_FILE=${ENV_DIR_HOST}/docker_container_name
+DRENV_SSH_AUTH_SOCK_HOST=${ENV_DIR_HOST}/resources/ssh_auth_sock
+
+if [ ! -f "$CONTAINER_NAME_FILE" ]; then
+    echo "Error: container name file missing!"
+    exit 1
+fi
+
+CONTAINER_NAME=$(cat ${CONTAINER_NAME_FILE})
+
+# ensure SSH_AUTH_SOCK links to current sock (e.g. in case machine has been rebooted)
+# Exit if no ssh auth sock (TODO: handle case of missing sock))
+if [[ -z "$SSH_AUTH_SOCK" ]]; then
+    echo "Error: Must provide SSH_AUTH_SOCK in environment" 1>&2
+    exit 1
+fi
+rm -f $DRENV_SSH_AUTH_SOCK_HOST
+ln -s $SSH_AUTH_SOCK $DRENV_SSH_AUTH_SOCK_HOST
+
+# ensure container running
+docker start $CONTAINER_NAME >/dev/null
+
+# Note, I think bashrc is not sourced when running in this way.
+# If this is needed in future, look at a previous version of this
+# file which resolved this but introduced issues around TTY alocation
+docker container exec $CONTAINER_NAME "$@"

@@ -1,0 +1,28 @@
+[build-system]
+requires = [
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drenv"
+description = "Tool to setup a docker environment for ROS development."
+dependencies = [
+    "dataclasses", # for python 3.6 compatibility
+    "docopt",
+    "rocker >= 0.2.13", # avoiding issues in previous versions (e.g. 0.2.10: https://github.com/osrf/rocker/issues/220, 0.2.12: https://github.com/osrf/rocker/issues/259)
+    "off-your-rocker",
+    "tabulate",
+]
+dynamic = ["version"]
+
+[project.scripts]
+drenv = "drenv.drenv:main"
+
+[tool.setuptools_scm]
+write_to = "drenv/_version.py"
+
+[tool.setuptools.packages.find]
+include = ["drenv"] 

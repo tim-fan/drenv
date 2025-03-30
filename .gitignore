@@ -1,0 +1,5 @@
+drenv.egg-info/
+__pycache__
+build
+venv
+drenv/_version.py

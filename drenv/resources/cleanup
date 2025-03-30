@@ -1,0 +1,30 @@
+#!/bin/bash
+set -o errexit
+
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+CONTAINER_NAME_FILE=${SCRIPT_DIR}/../docker_container_name
+DRENV_DIR=$(realpath --relative-to="$PWD" $SCRIPT_DIR/../)
+
+if [ ! -f "$CONTAINER_NAME_FILE" ]; then
+    echo "Error: container name file missing!"
+    exit 1
+fi
+
+CONTAINER_NAME=$(cat ${CONTAINER_NAME_FILE})
+
+# prompt before cleanup, unless -y arg provided
+if [ -z "$1" ] || [ "$1" != "-y" ]; then
+    echo "Deleting drenv directory and associated image+container: ${DRENV_DIR}"
+    echo "This cannot be undone."
+    read -p "Continue (y/N)?" choice
+    case "$choice" in 
+    y|Y ) ;;
+    * ) echo "abort"; exit 1;;
+    esac
+fi
+
+
+
+docker container rm -f ${CONTAINER_NAME}
+docker image rm drenv:${CONTAINER_NAME}
+rm -r $DRENV_DIR
