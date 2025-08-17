@@ -25,7 +25,7 @@ The tool is generally experimental and feedback/discussion is appreciated.
 With pip:
 
 ```bash
-pip install --upgrade git@github.com:tim-fan/drenv.git
+pip install --upgrade git+https://github.com/tim-fan/drenv.git
 ```
 
 See section "Troubleshooting" below if you encounter issues installing or running `drenv`.
